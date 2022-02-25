@@ -68,6 +68,10 @@ func (gj *graphjin) compileQuery(qr queryReq, role string) (*queryComp, error) {
 		})
 	}
 
+	if len(qr.vars) != 0 {
+		qc.qr.vars = qr.vars
+	}
+
 	return qc, err
 }
 
