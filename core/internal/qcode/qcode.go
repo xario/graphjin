@@ -72,6 +72,7 @@ type QCode struct {
 	Script    string
 	Metadata  allow.Metadata
 	Cache     Cache
+	OPA       OPA
 }
 
 type Select struct {
@@ -182,6 +183,10 @@ type Paging struct {
 
 type Cache struct {
 	Header string
+}
+
+type OPA struct {
+	Policy string
 }
 
 type Variables map[string]json.RawMessage
@@ -860,6 +865,8 @@ func (co *Compiler) compileOpDirectives(qc *QCode, dirs []graph.Directive) error
 		d := &dirs[i]
 
 		switch d.Name {
+		case "opa":
+			err = co.compileDirectiveOpa(qc, d)
 		case "cacheControl":
 			err = co.compileDirectiveCacheControl(qc, d)
 
@@ -1042,6 +1049,29 @@ func (co *Compiler) compileDirectiveSkip(sel *Select, d *graph.Directive) error 
 	ex.Right.Val = arg.Val.Val
 
 	setFilter(&sel.Where, ex)
+	return nil
+}
+
+func (co *Compiler) compileDirectiveOpa(qc *QCode, d *graph.Directive) error {
+	var policy string
+
+	for _, arg := range d.Args {
+		switch arg.Name {
+		case "policy":
+			if ifNotArg(arg, graph.NodeStr) {
+				return argErr("policy", "string")
+			}
+			policy = arg.Val.Val
+		default:
+			return fmt.Errorf("@opa: invalid argument: %s", d.Args[0].Name)
+		}
+	}
+
+	if len(d.Args) == 0 || policy == "" {
+		return fmt.Errorf("@opa: required argument 'policy' missing")
+	}
+
+	qc.OPA.Policy = policy
 	return nil
 }
 
