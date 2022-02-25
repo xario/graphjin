@@ -13,6 +13,7 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/cli v0.4.3 // indirect
 	github.com/Azure/go-autorest/autorest/to v0.4.0 // indirect
 	github.com/Azure/go-autorest/autorest/validation v0.3.1 // indirect
+	github.com/Jeffail/gabs/v2 v2.6.1
 	github.com/adjust/gorails v0.0.0-20171013043634-2786ed0c03d3
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/bradfitz/gomemcache v0.0.0-20220106215444-fb4bf637b56d
@@ -37,8 +38,10 @@ require (
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/jackc/pgx/v4 v4.14.1
+	github.com/joho/godotenv v1.4.0
 	github.com/jvatic/goja-babel v0.0.0-20220112112033-3ef795a80dfc
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/klauspost/compress v1.14.1
 	github.com/lestrrat-go/jwx v1.2.17
 	github.com/mitchellh/copystructure v1.2.0 // indirect

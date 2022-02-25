@@ -2,8 +2,10 @@ package serv
 
 import (
 	"encoding/json"
-	"errors"
+	"github.com/pkg/errors"
+
 	"fmt"
+	"github.com/dosco/graphjin/serv/internal/authorization"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -83,6 +85,17 @@ func apiV1Handler(s1 *Service) http.Handler {
 	return h
 }
 
+func ReadUserIP(r *http.Request) string {
+	IPAddress := r.Header.Get("X-Real-Ip")
+	if IPAddress == "" {
+		IPAddress = r.Header.Get("X-Forwarded-For")
+	}
+	if IPAddress == "" {
+		IPAddress = r.RemoteAddr
+	}
+	return IPAddress
+}
+
 func (s1 *Service) apiV1() http.Handler {
 	h := func(w http.ResponseWriter, r *http.Request) {
 		var err error
@@ -147,8 +160,27 @@ func (s1 *Service) apiV1() http.Handler {
 			return
 		}
 
-		// CHECK POLICY
-		fmt.Println(policy, string(req.Vars))
+		if s.gj.IsProd() {
+			opaClient, err := authorization.GetClient()
+			if err != nil {
+				s.log.Error(errors.Wrap(err, "failed to get OPA client"))
+				renderErr(w, errUnauthorized)
+				return
+			}
+
+			ip := ReadUserIP(r)
+			hasAccess, err := opaClient.HasAccess(policy, r.Header.Get("Authorization"), ip, req.Vars)
+			if err != nil {
+				s.log.Error(errors.Wrap(err, "failed evaluate OPA access"))
+				renderErr(w, errUnauthorized)
+				return
+			}
+
+			if !hasAccess {
+				renderErr(w, errUnauthorized)
+				return
+			}
+		}
 
 		switch {
 		case s.gj.IsProd():
