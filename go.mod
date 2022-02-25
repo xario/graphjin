@@ -17,7 +17,7 @@ require (
 	github.com/adjust/gorails v0.0.0-20171013043634-2786ed0c03d3
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/bradfitz/gomemcache v0.0.0-20220106215444-fb4bf637b56d
-	github.com/brianvoe/gofakeit/v6 v6.14.2
+	github.com/brianvoe/gofakeit/v6 v6.14.3
 	github.com/chirino/graphql v0.0.0-20210707003802-dfaf250c773e
 	github.com/containerd/containerd v1.5.9 // indirect
 	github.com/dop251/goja v0.0.0-20220110113543-261677941f3c
@@ -25,6 +25,7 @@ require (
 	github.com/git-chglog/git-chglog v0.15.1
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a
 	github.com/go-pkgz/expirable-cache v0.0.3
+	github.com/go-playground/validator/v10 v10.10.0
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gobuffalo/flect v0.2.4
@@ -70,6 +71,10 @@ require (
 	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11
 	golang.org/x/tools v0.1.8
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+)
+
+replace (
+	github.com/go-playground/validator/v10 v10.10.0 => ./core/internal/validator
 )
 
 go 1.16
