@@ -4,19 +4,20 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 type HasAccessRequest struct {
 	Token     string      `json:"token"`
 	Args      interface{} `json:"args"`
-	IpAddress string      `json:"ipAddress"`
+	IPAddress string      `json:"ipAddress"`
 }
 
 type HasAccessResponse struct {
 	Result bool `json:"result"`
 }
 
-func NewOpaClient(config *Config) *OpaClientImpl {
+func NewOPAClient(config *Config) *OpaClientImpl {
 	client := resty.New()
 	client.SetBaseURL(fmt.Sprintf("http://localhost:%s/v1/data", config.Port))
 	return &OpaClientImpl{
@@ -24,11 +25,19 @@ func NewOpaClient(config *Config) *OpaClientImpl {
 	}
 }
 
+func parseToken(jwt string) string {
+	parts := strings.Fields(jwt)
+	if len(parts) == 2 {
+		return parts[1]
+	}
+	return ""
+}
+
 func (s *OpaClientImpl) HasAccess(policy string, jwt string, ipAddress string, args interface{}) (bool, error) {
 	req := HasAccessRequest{
-		Token:     jwt[7:],
+		Token:     parseToken(jwt),
 		Args:      args,
-		IpAddress: ipAddress,
+		IPAddress: ipAddress,
 	}
 
 	var res HasAccessResponse

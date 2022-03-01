@@ -2,7 +2,7 @@ package authorization
 
 type OpaClientMock struct{}
 
-func NewOpaClientMock() *OpaClientMock {
+func NewOPAClientMock() *OpaClientMock {
 	return &OpaClientMock{}
 }
 

@@ -13,9 +13,9 @@ func GetClient() (OpaClient, error) {
 			return nil, err
 		}
 		if config.Mocked {
-			client = NewOpaClientMock()
+			client = NewOPAClientMock()
 		} else {
-			client = NewOpaClient(config)
+			client = NewOPAClient(config)
 		}
 	}
 

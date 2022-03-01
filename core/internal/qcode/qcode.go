@@ -866,7 +866,7 @@ func (co *Compiler) compileOpDirectives(qc *QCode, dirs []graph.Directive) error
 
 		switch d.Name {
 		case "opa":
-			err = co.compileDirectiveOpa(qc, d)
+			err = co.compileDirectiveOPA(qc, d)
 		case "cacheControl":
 			err = co.compileDirectiveCacheControl(qc, d)
 
@@ -1052,7 +1052,7 @@ func (co *Compiler) compileDirectiveSkip(sel *Select, d *graph.Directive) error 
 	return nil
 }
 
-func (co *Compiler) compileDirectiveOpa(qc *QCode, d *graph.Directive) error {
+func (co *Compiler) compileDirectiveOPA(qc *QCode, d *graph.Directive) error {
 	var policy string
 
 	for _, arg := range d.Args {
