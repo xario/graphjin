@@ -8,13 +8,17 @@ import (
 )
 
 func (c *compilerContext) renderUpdate() {
+	i := 0
 	for _, m := range c.qc.Mutates {
 		switch {
 		case m.Type == qcode.MTUpdate:
+			i = c.renderComma(i)
 			c.renderUpdateStmt(m)
 		case m.Rel.Type == sdata.RelOneToOne && m.Type == qcode.MTConnect:
+			i = c.renderComma(i)
 			c.renderOneToOneConnectStmt(m)
 		case m.Rel.Type == sdata.RelOneToOne && m.Type == qcode.MTDisconnect:
+			i = c.renderComma(i)
 			c.renderOneToOneDisconnectStmt(m)
 		}
 	}
@@ -24,7 +28,6 @@ func (c *compilerContext) renderUpdate() {
 func (c *compilerContext) renderUpdateStmt(m qcode.Mutate) {
 	sel := c.qc.Selects[0]
 
-	c.w.WriteString(`, `)
 	c.renderCteName(m)
 	c.w.WriteString(` AS (`)
 
@@ -37,23 +40,9 @@ func (c *compilerContext) renderUpdateStmt(m qcode.Mutate) {
 	n := c.renderInsertUpdateColumns(m, false)
 	c.renderNestedRelColumns(m, false, false, n)
 
-	c.w.WriteString(`) = (SELECT `)
-	n = c.renderInsertUpdateColumns(m, true)
-	c.renderNestedRelColumns(m, true, true, n)
-
-	c.w.WriteString(` FROM _sg_input i`)
-	c.renderNestedRelTables(m, true)
-
-	if m.Array {
-		c.w.WriteString(`, json_populate_recordset`)
-	} else {
-		c.w.WriteString(`, json_populate_record`)
-	}
-
-	c.w.WriteString(`(NULL::"`)
-	c.w.WriteString(m.Ti.Name)
-	joinPath(c.w, `", i.j`, m.Path)
-	c.w.WriteString(`) t)`)
+	c.w.WriteString(`) = (`)
+	c.renderValues(m, true)
+	c.w.WriteString(`)`)
 	// inner select ended
 
 	if m.ParentID == -1 {
@@ -70,7 +59,7 @@ func (c *compilerContext) renderUpdateStmt(m qcode.Mutate) {
 		// c.w.WriteString(rel.Right.Col.Table)
 		c.renderNestedRelTables(m, true)
 
-		if m.Array {
+		if m.IsArray {
 			c.w.WriteString(`, json_populate_recordset`)
 		} else {
 			c.w.WriteString(`, json_populate_record`)

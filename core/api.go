@@ -49,6 +49,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"github.com/dosco/graphjin/core/internal/graph"
 	_log "log"
 	"os"
 	"sync"
@@ -269,9 +270,7 @@ func (g *GraphJin) GraphQL(
 
 	if rc != nil && rc.APQKey != "" && query == "" {
 		if v, ok := gj.apq.Get(rc.APQKey); ok {
-			if v.query != "" {
-				query = v.query
-			}
+			query = v.query
 			ct.op = v.op
 			ct.name = v.name
 		} else {
@@ -360,6 +359,39 @@ func (g *GraphJin) Reload() error {
 func (g *GraphJin) IsProd() bool {
 	gj := g.Load().(*graphjin)
 	return gj.prod
+}
+
+func (g *GraphJin) GetOpaPolicy(query string) (string, error) {
+	op, err := graph.Parse([]byte(query), nil)
+	if err != nil {
+		return "", err
+	}
+
+	if len(op.Directives) > 0 {
+		for _, directive := range op.Directives {
+			if directive.Name != "opa" {
+				continue
+			}
+
+			if len(directive.Args) == 0 {
+				continue
+			}
+
+			arg := directive.Args[0]
+			if arg.Name != "policy" {
+				continue
+			}
+
+			policy := arg.Val.Val
+			if len(policy) == 0 {
+				continue
+			}
+
+			return policy, nil
+		}
+	}
+
+	return "", errors.New("no policy found")
 }
 
 // Operation function return the operation type and name from the query.

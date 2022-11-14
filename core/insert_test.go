@@ -42,6 +42,72 @@ func Example_insert() {
 	// Output: {"users": [{"id": 1001, "email": "user1001@test.com"}]}
 }
 
+func Example_inlineInsert() {
+	gql := `mutation {
+		users(insert: { id: $id, email: $email, full_name: $full_name }) {
+			id
+			email
+			full_name
+		}
+	}`
+
+	vars := json.RawMessage(`{
+		"id": 1007,
+		"email": "user1007@test.com",
+		"full_name": "User 1007"
+	}`)
+
+	conf := newConfig(&core.Config{DBType: dbType, DisableAllowList: true})
+	gj, err := core.NewGraphJin(conf, db)
+	if err != nil {
+		panic(err)
+	}
+
+	ctx := context.WithValue(context.Background(), core.UserIDKey, 3)
+	res, err := gj.GraphQL(ctx, gql, vars, nil)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(string(res.Data))
+	}
+	// Output: {"users": [{"id": 1007, "email": "user1007@test.com", "full_name": "User 1007"}]}
+}
+
+func Example_inlineInsertWithValidation() {
+	gql := `mutation 
+		@constraint(variable: "email", format: "email", min: 1, max: 100)
+		@constraint(variable: "full_name", requiredIf: { id: 1007 } ) {
+		users(insert: { id: $id, email: $email, full_name: $full_name }) {
+			id
+			email
+			full_name
+		}
+	}`
+
+	vars := json.RawMessage(`{
+		"id": 1007,
+		"email": "not_an_email"
+	}`)
+
+	conf := newConfig(&core.Config{DBType: dbType, DisableAllowList: true})
+	gj, err := core.NewGraphJin(conf, db)
+	if err != nil {
+		panic(err)
+	}
+
+	ctx := context.WithValue(context.Background(), core.UserIDKey, 3)
+	res, err := gj.GraphQL(ctx, gql, vars, nil)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(string(res.Data))
+	}
+	// Unordered output:
+	// Validation Failed: $full_name: Key: '' Error:Field validation for '' failed on the 'required_if' tag
+	// Validation Failed: $email: Key: '' Error:Field validation for '' failed on the 'email' tag
+	// validation failed
+}
+
 func Example_insertWithPresets() {
 	gql := `mutation {
 		products(insert: $data) {
@@ -368,6 +434,53 @@ func Example_insertIntoTableAndConnectToRelatedTableWithArrayColumn() {
 		fmt.Println(string(res.Data))
 	}
 	// Output: {"products": [{"id": 2006, "name": "Product 2006", "categories": [{"id": 1, "name": "Category 1"}, {"id": 2, "name": "Category 2"}, {"id": 3, "name": "Category 3"}, {"id": 4, "name": "Category 4"}, {"id": 5, "name": "Category 5"}]}]}
+}
+
+func Example_insertWithCamelToSnakeCase() {
+	gql := `mutation {
+		products(insert: $data) {
+			id
+			name
+			owner {
+				id
+				email
+			}
+		}
+	}`
+
+	vars := json.RawMessage(`{
+		"data": {
+			"id": 2007,
+			"name": "Product 2007",
+			"description": "Description for product 2007",
+			"price": 2011.5,
+			"tags": ["Tag 1", "Tag 2"],
+			"category_ids": [1, 2, 3, 4, 5]
+		}
+	}`)
+
+	conf := newConfig(&core.Config{DBType: dbType, DisableAllowList: true, EnableCamelcase: true})
+	err := conf.AddRoleTable("user", "products", core.Insert{
+		Presets: map[string]string{"ownerId": "$user_id"},
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	gj, err := core.NewGraphJin(conf, db)
+	if err != nil {
+		panic(err)
+	}
+
+	ctx := context.WithValue(context.Background(), core.UserIDKey, 3)
+	res, err := gj.GraphQL(ctx, gql, vars, nil)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(string(res.Data))
+	}
+	// Output: {"products": [{"id": 2007, "name": "Product 2007", "owner": {"id": 3, "email": "user3@test.com"}}]}
 }
 
 func Example_insertIntoRecursiveRelationship() {
